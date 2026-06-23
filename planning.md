@@ -1,132 +1,163 @@
 # TakeMeter Classification Project: Planning Document
 
-## 1. Community Selection
+## Community and Task
 
-### Community Chosen: r/gaming
+I chose the public r/gaming community. It is a good fit for a classification task because gaming conversations are not all doing the same thing: people share subjective takes, explain mechanics or news, ask for help, and post discoveries or trivia. The same game can appear in several different discourse modes, which makes the task more interesting than keyword matching. For example, an Elden Ring post could be a strategy question, a complaint about difficulty, an explanation of weapon scaling, or a surprising discovery.
 
-**Why r/gaming?**
-r/gaming is a large, active subreddit with over 4 million subscribers dedicated to discussing video games, gaming culture, and gaming news. This community is ideal for a classification task because posts naturally vary across multiple dimensions: some are factual game announcements, some are personal opinions about games, some ask for help or recommendations, and some share interesting gaming facts. The discourse is naturally diverse and non-trivial to classify because the same topic (e.g., a game's quality) can be discussed from factual, opinion-based, or help-seeking angles. This variety makes the classification task genuinely challenging and interesting.
+This classifier will label public r/gaming posts or comments by the writer's main communicative purpose. I will classify the text itself, not the popularity of the post, the game being discussed, or whether I personally agree with it.
 
----
+## Labels
 
-## 2. Labels & Definitions
+I will use four labels: `opinion`, `explanation`, `seeking_assistance`, and `cool_fact`.
 
-I will use **4 labels** for this classification task:
+### `opinion`
 
-### Label 1: **Opinion**
-A post that primarily expresses a personal judgment, preference, or subjective view about a game, gaming trend, or gaming-related topic. The main purpose is to share what the poster believes or feels.
+A post is `opinion` when its main purpose is to express a personal judgment, preference, complaint, praise, prediction, or argument about a game, company, genre, mechanic, or gaming culture.
 
-**Example 1:** "Red Dead Redemption 2 is the most immersive game ever made. The attention to detail is unmatched, and I think it's one of the greatest games of all time."
+Examples:
 
-**Example 2:** "Honestly, microtransactions in AAA games have ruined the industry. It's getting ridiculous and I hate how greedy these companies have become."
+- "Red Dead Redemption 2 is still the most immersive game ever made. The slower pace makes the world feel real instead of empty."
+- "Battle passes have made multiplayer games feel like chores. I miss when unlocking cosmetics was actually fun."
 
----
+### `explanation`
 
-### Label 2: **Explanation**
-A post that primarily provides factual information, technical details, clarifications, or educational content about games, gaming mechanics, updates, or industry news. The main purpose is to inform or explain.
+A post is `explanation` when its main purpose is to provide factual information, clarify how something works, summarize news, or explain a mechanic, update, technical feature, or industry event.
 
-**Example 1:** "Just to clarify: the newest Baldur's Gate 3 patch changed the AC calculation system. Proficiency bonus now applies directly to AC instead of through attack rolls. This makes armor significantly more valuable."
+Examples:
 
-**Example 2:** "Call of Duty's DLSS implementation uses Nvidia's SuperResolution technology to render at a lower resolution and upscale. This improves performance by 20-30% depending on GPU."
+- "In Baldur's Gate 3, advantage means the game rolls two d20s and uses the higher result, which is why positioning matters so much."
+- "DLSS renders the game at a lower internal resolution and then upscales it with Nvidia's model, which can improve frame rate without changing every graphics setting."
 
----
+### `seeking_assistance`
 
-### Label 3: **Seeking Assistance**
-A post that asks a question or requests help, advice, or recommendations from the community. The main purpose is to get guidance or solve a problem.
+A post is `seeking_assistance` when its main purpose is to ask the community for help, recommendations, troubleshooting, advice, or a decision.
 
-**Example 1:** "I'm stuck on the Elden Ring boss fight with Malenia. Does anyone have any tips or strategies that worked for them? What weapons/spells do you recommend?"
+Examples:
 
-**Example 2:** "Looking for a good co-op game to play with my friends. We like story-driven games but also want competitive elements. Any suggestions?"
+- "I'm stuck on Malenia in Elden Ring. What build or strategy helped you finally beat her?"
+- "What are some good couch co-op games for two people who liked It Takes Two but want something less platform-heavy?"
 
----
+### `cool_fact`
 
-### Label 4: **Cool Fact**
-A post that shares an interesting, surprising, or fun piece of trivia, discovery, or novelty about games. The main purpose is to inform and entertain with unexpected or lesser-known information.
+A post is `cool_fact` when its main purpose is to share an interesting discovery, surprising detail, bit of trivia, unusual screenshot context, easter egg, or novelty meant to inform and entertain.
 
-**Example 1:** "Did you know? The original Half-Life was developed in just 3 years with a team of 15 people. The engine was built from scratch and this level of quality was incredible for 1998."
+Examples:
 
-**Example 2:** "I just discovered that in Skyrim, if you pickpocket someone's clothes, they walk around in their underwear. I've spent 2 hours just doing this and it's hilarious."
+- "The Game Boy that survived a Gulf War bombing still works and has been displayed at the Nintendo store."
+- "In Skyrim, NPCs can react differently if you drop valuable items near them, and some will actually fight over who gets to keep them."
 
----
+## Hard Edge Cases
 
-## 3. Hard Edge Cases
+The hardest boundary will be `opinion` vs. `explanation`. Many posts explain a fact in order to support a take. I will label by primary intent: if the post mainly teaches or clarifies something, it is `explanation`; if the facts are mainly evidence for a personal judgment, it is `opinion`.
 
-### Primary Edge Case: Opinion vs. Explanation with Opinion
+Ambiguous example:
 
-**Challenge:** Posts that explain facts but also embed personal judgment make it ambiguous whether the post is primarily explanatory or opinion-based.
+> "Starfield runs at 30fps on console because Bethesda prioritized simulation systems, but honestly that still feels unacceptable for a big release."
 
-**Example ambiguous post:** "The new Starfield gameplay reveal shows 120fps on high-end PCs, but honestly, I think 60fps is good enough. Why pay for a gaming PC when my console runs games fine at 60fps?"
+Decision rule: label this `opinion` because the factual setup exists to support the judgment that the frame rate is unacceptable.
 
-This post contains both factual explanation (120fps capability) and personal opinion (thinking 60fps is sufficient).
+Another hard boundary is `seeking_assistance` vs. `opinion`. A frustrated question can sound like a complaint, but if the writer is functionally asking for advice, I will label it `seeking_assistance`.
 
-**Handling Strategy:** 
-- Classify by **primary intent**: What is the post's main message? Is the poster primarily trying to inform readers of a fact, or primarily advocating for their subjective view?
-- If the opinion is secondary to explaining facts → classify as **Explanation**
-- If the facts are just support for a subjective argument → classify as **Opinion**
-- When truly ambiguous (50/50), use the **last sentence** as the tiebreaker: what does the poster emphasize at the end?
+Ambiguous example:
 
-### Secondary Edge Case: Seeking Assistance vs. Opinion
+> "This boss feels completely unfair. Is there any reliable way to dodge the second phase attack?"
 
-Some posts ask for help while also expressing frustration or dissatisfaction. "Anyone else think this game is impossibly hard? How do people beat this?" contains both a question and an implicit opinion about difficulty.
+Decision rule: label this `seeking_assistance` because the concrete request for a strategy is the main purpose.
 
-**Handling Strategy:** Focus on the **functional purpose**. If the primary goal is to get help/advice, classify as **Seeking Assistance** even if opinion is embedded.
+A third hard boundary is `cool_fact` vs. `explanation`. Both can share information, but `cool_fact` is centered on novelty or surprise, while `explanation` is centered on understanding how something works.
 
----
+Ambiguous example:
 
-## 4. Data Collection Plan
+> "You can skip a section of Portal 2 by placing a portal behind the panel before the dialogue finishes because the trigger volume only checks your position."
 
-**Source:** r/gaming subreddit via Reddit API (PRAW library)
+Decision rule: label this `explanation` if the post focuses on the mechanism, but `cool_fact` if it is presented mainly as a surprising discovery. If still tied after reading the whole post, I will choose the label that best matches the final sentence because writers often end with their main point.
 
-**Collection Strategy:**
-- Scrape posts from r/gaming's "Hot" and "New" sections to capture recent, diverse posts
-- Target 100 total posts (25 per label) to build initial balanced dataset
-- Use random sampling to avoid selection bias toward popular posts
+During annotation, I will keep a running note for difficult rows in the `notes` column. Each note will include the competing labels and the reason for the final decision, such as "opinion vs explanation; facts support complaint, labeled opinion."
 
-**Handling Underrepresentation:**
-- If any label has <15 examples after 100 posts, I will:
-  1. Use targeted keyword searches (e.g., "how do I" for Seeking Assistance, "did you know" for Cool Fact)
-  2. Manually search for underrepresented label patterns within existing r/gaming threads
-  3. Increase total dataset size to 150 if necessary to achieve balanced representation
+### Documented Annotation Decisions
 
-**Timeline:** Aim to collect examples over 2-3 days to capture different posting times and user activity patterns.
+- "Bethesda announces yet another Skyrim port" was ambiguous between `opinion` and `explanation`. I labeled it `opinion` because "yet another" makes the post's main point a judgment about repeated Skyrim ports, not just a neutral announcement.
+- "This is such a weird duo, but should I buy a SNES classic or a PS3 slim? [Nintendo] [Playstation] [help]" was ambiguous between `opinion` and `seeking_assistance`. I labeled it `seeking_assistance` because the writer is asking for buying advice.
+- "Found a hidden shield worth 10 stars on the blue mark in the prison, anyone know what it's about? (Also free 10 stars)" was ambiguous between `cool_fact` and `seeking_assistance`. I labeled it `cool_fact` because the main value is sharing a hidden discovery, even though it includes a question.
+- "When GameStop sells a used game, do the developers of that game get a fraction of money made from it?" was ambiguous between `explanation` and `seeking_assistance`. I labeled it `explanation` because it asks for factual clarification about an industry mechanism rather than personal advice.
 
----
+## Data Collection Plan
 
-## 5. Evaluation Metrics
+I will collect public examples from r/gaming posts and comments. I can use the existing `cleaned_subreddit_gaming.csv` in this repo as a source pool, then manually review and label selected rows into a smaller final CSV with at least these columns:
 
-**Primary Metrics:**
+- `text`: the post or comment text being classified
+- `label`: one of `opinion`, `explanation`, `seeking_assistance`, or `cool_fact`
+- `notes`: optional annotation notes, especially for difficult cases
 
-1. **Accuracy** — Overall percentage of correct classifications. This tells me if the model is working at all, but it's not enough alone.
+My target is 200 labeled examples total, balanced as closely as possible:
 
-2. **Per-Label Precision & Recall** — For each label:
-   - **Precision:** Of posts I predicted as [Label], how many were actually [Label]? (False positives matter—don't want to mislabel gaming discussions)
-   - **Recall:** Of posts that are actually [Label], how many did I find? (False negatives matter—don't want to miss legitimate posts)
+- 50 `opinion`
+- 50 `explanation`
+- 50 `seeking_assistance`
+- 50 `cool_fact`
 
-3. **Macro F1-Score** — Balanced measure of precision and recall across all labels. This is important because some labels may be rarer, and I want the model to perform well on all of them, not just dominant classes.
+I will annotate manually rather than relying on automatic labels. I will read each row in full before assigning a label. If the CSV row has both a title and a comment body, I will use the body as the primary text when the body stands alone; if the body depends on the post title for context, I will combine them as `Title: ... Comment: ...` in the `text` field.
 
-4. **Confusion Matrix** — Shows which labels are confused with each other. I expect Opinion↔Explanation to have high confusion (our identified edge case), and this will reveal if that's true.
+If a label is underrepresented after reviewing 200 candidate examples, I will not accept a heavily imbalanced dataset. I will collect additional public r/gaming examples using targeted searches:
 
-**Why These Metrics?**
-- Accuracy alone hides poor performance on minority labels
-- Precision/Recall show whether the model is useful in practice (e.g., if Seeking Assistance has low recall, I miss help requests)
-- Macro F1 ensures balanced performance across all 4 labels
-- Confusion matrix validates our edge case assumptions and guides error analysis
+- `seeking_assistance`: "how do I", "any tips", "recommend", "what should I play", "help", "stuck"
+- `cool_fact`: "did you know", "I just found", "easter egg", "detail", "turns out", "hidden"
+- `explanation`: "because", "works by", "patch", "update", "mechanic", "for anyone confused"
+- `opinion`: "I think", "overrated", "underrated", "best", "worst", "I hate", "I love"
 
----
+If a label is still under 35 examples after 200 reviewed candidates, I will continue collecting until every label has at least 35 examples and no single label is more than 70% of the dataset. The preferred final distribution is still 50 examples per label.
 
-## 6. Definition of Success
+## Evaluation Metrics
 
-**Minimum Acceptable Performance:** Macro F1-score of **0.70 or higher** across all labels.
+I will evaluate both the zero-shot baseline and the fine-tuned DistilBERT model with multiple metrics.
 
-**Why 0.70?**
-- At 0.70 F1, the model correctly identifies ~70% of all post types while maintaining reasonable precision (minimal false positives)
-- This is realistic for a 4-label task with overlapping concepts (Opinion vs. Explanation edge cases)
-- Below 0.70, too many misclassifications to be useful for a real community tool
+Overall accuracy will show the percentage of test examples classified correctly, which is useful as a quick summary but insufficient by itself. A model could look accurate by overpredicting a common label while performing poorly on rarer labels.
 
-**Real-World Usefulness:**
-If this classifier were deployed in a gaming community tool (e.g., to automatically filter/organize r/gaming posts), users would expect:
-- Seeking Assistance posts reliably flagged (low false negatives on help requests)
-- Cool Facts not mislabeled as Opinions (avoid making educational content seem subjective)
-- Acceptable trade-off: Some Opinion↔Explanation confusion is acceptable because both indicate substantive discussion
+Macro F1 will be my primary single-number metric because all four labels matter. Macro F1 weights each label equally, so weak performance on `seeking_assistance` or `cool_fact` cannot be hidden by strong performance on `opinion`.
 
-**Target Performance:** Ideally **0.75+ macro F1** — this would mean the model is production-ready for real-world use in community moderation or post organization tools.
+Per-class precision, recall, and F1 will show how each label behaves:
+
+- Precision matters because a community tool should not dump unrelated posts into a category.
+- Recall matters because missed help requests or missed informational posts would make the classifier less useful.
+- Per-class F1 gives a compact view of whether each label is learnable.
+
+The confusion matrix will be especially important because I expect the main failures to be specific label-pair confusions, especially `opinion` vs. `explanation` and `explanation` vs. `cool_fact`. The matrix will let me see whether errors are random or concentrated along those boundaries.
+
+## Definition of Success
+
+This classifier will be genuinely useful if it can organize r/gaming discussion modes better than a general zero-shot prompt and with reliable performance across all labels.
+
+Minimum acceptable success:
+
+- Fine-tuned model macro F1 is at least 0.70.
+- Fine-tuned model accuracy is at least 0.70.
+- No individual label has F1 below 0.60.
+- Fine-tuned macro F1 is at least 0.05 higher than the zero-shot baseline.
+
+Good enough for deployment in a real community tool:
+
+- Fine-tuned model macro F1 is at least 0.75.
+- `seeking_assistance` recall is at least 0.75, because missing help requests would be a visible failure for users.
+- No single confusion pair accounts for more than half of all errors. If one pair dominates, the label boundary needs more work before deployment.
+
+If the model misses these thresholds, I will treat the result as a useful prototype but not a deployable classifier. The next fix would be either collecting more examples for the weakest label pair or tightening the label definitions if error analysis shows annotation inconsistency.
+
+## AI Tool Plan
+
+### Label Stress-Testing
+
+Before final annotation, I will give an AI tool the four label definitions and the edge-case rules above. I will ask it to generate 5-10 r/gaming-style posts that sit between two labels, especially `opinion`/`explanation`, `seeking_assistance`/`opinion`, and `cool_fact`/`explanation`.
+
+I will manually classify those generated boundary posts using my definitions. If I cannot classify them cleanly, I will revise the relevant label definition or decision rule before annotating the 200-example dataset. I will not add generated posts to the training data; they are only for testing the clarity of the spec.
+
+### Annotation Assistance
+
+For the initial 200-example dataset, I plan to label manually without LLM pre-labeling. This keeps me close to the data and reduces the risk that an AI tool's assumptions shape the dataset.
+
+If I later use an LLM to pre-label an additional batch, I will add an `ai_suggested_label` column and still manually review every example before finalizing the `label` column. I will disclose that workflow in the README AI usage section, including which tool was used and what kinds of labels I corrected.
+
+### Failure Analysis
+
+After evaluating the fine-tuned model, I will give an AI tool a list of misclassified test examples with true label, predicted label, and text. I will ask it to identify possible patterns, such as sarcasm, short comments, missing context from image posts, or repeated confusion between two labels.
+
+I will verify any suggested pattern myself by rereading the wrong predictions and checking the confusion matrix. In the README, I will report only patterns that I can confirm from the actual examples, and I will mention any AI-suggested explanations that I rejected.
